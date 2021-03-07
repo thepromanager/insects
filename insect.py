@@ -114,7 +114,10 @@ if __name__=="__main__":
             gameDisplay.fill([bg_color]*3)
             for x in range(int(32*32/(factor*size))):
                 for y in range(int(32*18/(factor*size))):
-                    sprite=createSprite()
+                    if(random.random()<0.5):
+                        sprite=createSprite()
+                    else:
+                        sprite=insectart2.createSprite()
                     gameDisplay.blit(sprite,(int((x-0.5)*factor*size)+size*factor/2,int((y-0.5)*factor*size)+size*factor/2))
         changed = 1
         jump_out = False

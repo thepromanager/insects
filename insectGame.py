@@ -39,6 +39,8 @@ class Insect():
         self.speed=10
         self.hp=10
         self.maxhp=10
+        self.defense=0
+        
         self.name=self.createName()
         #self.level=lvl
     def createName(self):
@@ -55,8 +57,6 @@ class Action():
         self.target=None
         self.activate=types.MethodType(activateFunction,self)
 
-    def activate(self):
-        pass
 
 class World():
     def __init__(self):
@@ -119,6 +119,12 @@ while is_running:
                 if event.ui_element == fight_button:
                     world.mode="f"
                     world.enemies=[Insect(),Insect(),Insect()]
+                    for button in enemy_buttons:
+                        button.hide()
+                    for i in range(len(world.allies)):
+                        button=ally_buttons[i]
+                        button.show()
+                        button.set_text("select")
                 if event.ui_element == inspect_button:
                     world.mode="i"
                     inspection_selectionlist.set_item_list(new_item_list=[ally.name for ally in world.allies])
@@ -155,6 +161,7 @@ while is_running:
                             actionNames=[action.name for action in world.allies[i].actions]
                             action_selectionlist.set_item_list(new_item_list=actionNames)
                             world.active=world.allies[i]
+                            break
 
                 if(world.buttonMode=="target" and action_selectionlist.get_single_selection()):
                     for action in world.active.actions:
@@ -168,12 +175,24 @@ while is_running:
                             action_selectionlist.set_item_list(new_item_list=[])
 
                             world.buttonMode="action"
+                            for button in enemy_buttons:
+                                button.hide()
+                            for i in range(len(world.allies)):
+                                button=ally_buttons[i]
+                                button.set_text("select")
+                            break
                     for i, button in enumerate(enemy_buttons):
                         if event.ui_element == button:
                             action.target=world.enemies[i]
                             world.active.determinedAction=action
                             action_selectionlist.set_item_list(new_item_list=[])
                             world.buttonMode="action"
+                            for button in enemy_buttons:
+                                button.hide()
+                            for i in range(len(world.allies)):
+                                button=ally_buttons[i]
+                                button.set_text("select")
+                            break
         manager.process_events(event)
 
 
@@ -187,6 +206,14 @@ while is_running:
             action_selectionlist.set_item_list(new_item_list=[])
         else:
             world.buttonMode="target"
+            for i in range(len(world.allies)):
+                button=ally_buttons[i]
+                button.set_text("target")
+            for i in range(len(world.enemies)):
+                button=enemy_buttons[i]
+                button.show()
+                button.set_text("target")
+                
         
     manager.update(time_delta)
     #draw
@@ -200,7 +227,7 @@ while is_running:
             pygame.draw.rect(window_surface, (0,200,0),(450+i*size*factor, 275+2*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
         for i in range(len(world.enemies)):
             person = world.enemies[i]
-            window_surface.blit(person.image,(450+i*size*factor, 175))
+            window_surface.blit(pygame.transform.flip(person.image,0,1),(450+i*size*factor, 175))
             pygame.draw.rect(window_surface, (100,0,0),(450+i*size*factor, 175+1*size*factor, size*factor, factor*2), 0)
             pygame.draw.rect(window_surface, (0,200,0),(450+i*size*factor, 175+1*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
     elif(world.mode=="i"):
