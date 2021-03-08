@@ -147,6 +147,7 @@ while is_running:
                 if event.ui_element == loot_insect_button:
                     world.mode=""
                     world.allies.append(world.lootInsect)
+                    world.lootInsect.alive = True
                 if event.ui_element == inspect_button:
                     world.mode="i"
                     inspection_selectionlist.set_item_list(new_item_list=[ally.name for ally in world.allies])
@@ -162,7 +163,7 @@ while is_running:
                                 else:
                                     enemy.determinedAction.target=random.choice(world.enemies)
                         insects=world.enemies+world.allies #copy of all initial insects
-                        insects.sort(key=lambda x:x.speed)
+                        insects.sort(key=lambda x:-x.speed)
                         for insect in insects: #loop through all initial insects
                             if(insect.determinedAction and insect.alive):
                                 insect.determinedAction.activate()
@@ -279,7 +280,7 @@ while is_running:
             inspect_textbox.html_text="Insect information up ahead <br> so far"
             inspect_textbox.rebuild()
     elif(world.mode=="w"):
-        loot_insect_textbox.html_text=insect.description()
+        loot_insect_textbox.html_text=world.lootInsect.description()
         loot_insect_textbox.rebuild()
         bigImage=pygame.transform.scale(world.lootInsect.image,(4*size*factor,4*size*factor))
         window_surface.blit(bigImage,(360, 160))
