@@ -5,6 +5,7 @@ import math
 import insect as insectart
 import types
 import time
+import json
 
 pygame.init()
 screenSize=(1200,700)
@@ -25,7 +26,20 @@ managers={
 
 factor = 3
 size=32
-
+scientificHash={}
+with open('insectscientificName4.json', 'r') as f:
+    scientificHash = json.load(f)
+vernacularHash={}
+with open('insectvernacularName4.json', 'r') as f:
+    vernacularHash = json.load(f)
+class Action():
+    def __init__(self,owner,name,activateFunction,targetRequired=True,isBad=True):
+        self.owner=owner
+        self.name=name
+        self.targetRequired=targetRequired
+        self.isBad=isBad
+        self.target=None
+        self.activate=types.MethodType(activateFunction,self)
 class Insect():
     def __init__(self):
         self.alive=True
@@ -42,30 +56,39 @@ class Insect():
         self.hp=self.maxhp
         self.defense=random.randint(0,random.randint(0,5))
         
-        self.name=self.createName()
+        self.name=""
+        self.species=""
+        self.createName()
         #self.level=lvl
     def createName(self):
-        a = ["Skr", "Gn", "Ghr","Kr","Br"]
-        b = ["ee","ooh","ie","ig","ix"]
-        return random.choice(a)+random.choice(b)
+        length=4
+        name=""
+        letter=random.choice(vernacularHash[""])
+        while letter != "end":
+            name+=letter
+            letter=random.choice(vernacularHash[name[-length:]])
+        self.name=name
+        species=""
+        letter=random.choice(scientificHash[""])
+        while letter != "end":
+            species+=letter
+            letter=random.choice(scientificHash[species[-length:]])
+        self.species=species
+        #a = ["Skr", "Gn", "Ghr","Kr","Br"]
+        #b = ["ee","ooh","ie","ig","ix"]
+        #return random.choice(a)+random.choice(b)
     def description(self):
         desc = ""
         desc+= "Name: "+str(self.name)+"<br>"
-        desc+= "HP: "+str(self.maxhp)+"<br>"
+        desc+= "Species: "+str(self.species)+"<br>"
+        desc+= "HP: "+str(self.hp)+" / "+str(self.maxhp)+"<br>"
         desc+= "Speed: "+str(self.speed)+"<br>"
         desc+= "Defense: "+str(self.defense)+" (irrelevant)<br>"
         desc+= " <br>Attacks: <br>"
         for a in self.actions:
             desc+=a.name+"<br>"
         return desc
-class Action():
-    def __init__(self,owner,name,activateFunction,targetRequired=True,isBad=True):
-        self.owner=owner
-        self.name=name
-        self.targetRequired=targetRequired
-        self.isBad=isBad
-        self.target=None
-        self.activate=types.MethodType(activateFunction,self)
+
 
 
 class World():
@@ -77,7 +100,7 @@ class World():
         self.enemies=[]
         self.allies=[Insect()]
         self.lootInsect=None
- 
+        self.scientificHash={} 
 world=World()
 
 # Main
@@ -151,8 +174,11 @@ while is_running:
                         button.set_text("select")
                 if event.ui_element == loot_insect_button:
                     world.mode=""
-                    world.allies.append(world.lootInsect)
-                    world.lootInsect.alive = True
+                    if(len(world.allies)<3):
+                        world.allies.append(world.lootInsect)
+                        world.lootInsect.alive = True
+                    else:
+                        print("Not enough space in your party!")
                 if event.ui_element == inspect_button:
                     world.mode="i"
                     inspection_selectionlist.set_item_list(new_item_list=[ally.name for ally in world.allies])
