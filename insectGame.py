@@ -6,6 +6,7 @@ import insect as insectart
 import types
 import time
 import json
+import inspect
 
 pygame.init()
 screenSize=(1200,700)
@@ -184,6 +185,7 @@ day_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((20, 25), 
 fight_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 275), (200, 50)),text='Fight ye Foes',manager=managers[""])
 inspect_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 350), (200, 50)),text='Inspect ye Insects',manager=managers[""])
 altar_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 425), (200, 50)),text='Sacrifice ye Mates',manager=managers[""])
+moveset_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 500), (200, 50)),text="Understand Brawlin'",manager=managers[""])
 
 #health_window = pygame_gui.elements.UIImage(relative_rect=pygame.Rect((450, 275), (size*factor, size*factor)),manager=managers[""],image_surface=Insect().image)
 
@@ -207,12 +209,20 @@ fight_inspect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect(
 # Inspection
 inspection_selectionlist = pygame_gui.elements.UISelectionList(relative_rect=pygame.Rect((100, 175), (200, 2*size*factor+150)),item_list=[],manager=managers["i"],allow_multi_select=False)
 inspect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((800, 175), (300, 350)),html_text="Insect information up ahead <br> so far",manager=managers["i"])
-back_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((50, 50), (100, 50)),text='Back',manager=managers["i"])
+
+back_buttons = [
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((50, 50), (100, 50)),text='Back',manager=managers["i"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((50, 50), (100, 50)),text='Back',manager=managers["m"]),
+]
 
 # Win
 win_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((20, 25), (200, 75)),html_text="YOU WIN <br>This insect will join your team",manager=managers["w"])
 loot_insect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((800, 175), (300, 350)),html_text="This insect is cool.",manager=managers["w"])
 loot_insect_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, 200+4*size*factor), (4*size*factor, 100)),text='This insect will join my team',manager=managers["w"])
+
+# Movelist
+move_selectionlist = pygame_gui.elements.UISelectionList(relative_rect=pygame.Rect((100, 175), (200, 2*size*factor+150)),item_list=[],manager=managers["m"],allow_multi_select=False)
+move_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((800, 175), (300, 350)),html_text="Moveset information up ahead <br> so far",manager=managers["m"])
 
 
 
@@ -230,8 +240,11 @@ while is_running:
             if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 
                 #buttons
-                if event.ui_element == back_button:
+                if event.ui_element in back_buttons:
                     world.mode=""
+                if event.ui_element == moveset_button:
+                    world.mode="m"
+                    move_selectionlist.set_item_list(new_item_list=[action[0].__name__.capitalize() for action in actionPool])
                 if event.ui_element == fight_button:
                     world.mode="f"
                     world.enemies=[]
@@ -402,6 +415,17 @@ while is_running:
         else:
             inspect_textbox.html_text="Insect information up ahead <br> so far"
             inspect_textbox.rebuild()
+    elif(world.mode=="m"):
+        if(move_selectionlist.get_single_selection()):
+
+            for action in actionPool:
+                if action[0].__name__.capitalize()==move_selectionlist.get_single_selection():
+                    break
+            move_textbox.html_text=inspect.getsource(action[0])
+            move_textbox.rebuild()
+        else:
+            move_textbox.html_text="Moveset information up ahead <br> so far"
+            move_textbox.rebuild()
     elif(world.mode=="w"):
         loot_insect_textbox.html_text=world.lootInsect.description()
         loot_insect_textbox.rebuild()
