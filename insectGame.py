@@ -20,6 +20,7 @@ managers={
     "f":pygame_gui.UIManager(screenSize), #Fight
     "i":pygame_gui.UIManager(screenSize), #Inspection
     "a":pygame_gui.UIManager(screenSize), #Altar
+    "m":pygame_gui.UIManager(screenSize), #Movelist
     "w":pygame_gui.UIManager(screenSize), #Win
     }
 #overlay=pygame_gui.UIManager(screenSize)
@@ -32,35 +33,120 @@ with open('insectscientificName4.json', 'r') as f:
 vernacularHash={}
 with open('insectvernacularName4.json', 'r') as f:
     vernacularHash = json.load(f)
+
+class World():
+    def __init__(self):
+        self.day = 0
+        self.mode = ""
+        self.buttonMode="action" # action // target // inspect
+        self.active=None
+        self.enemies=[]
+        self.allies=[]
+        self.lootInsect=None
+        self.scientificHash={} 
+world=World()
+
 class Action():
-    def __init__(self,owner,name,activateFunction,targetRequired=True,isBad=True):
+    def __init__(self,owner,activateFunction):
         self.owner=owner
-        self.name=name
-        self.targetRequired=targetRequired
-        self.isBad=isBad
+        self.name=activateFunction.__name__.capitalize()
+        self.targetRequired=True
+        self.isBad=True
         self.target=None
-        self.activate=types.MethodType(activateFunction,self)
+        self.activate=types.MethodType(activateFunction, self)
+    def generateAction(self):
+        pass
+
+#Fling  Bash Prick Pound DashSlashthwack amputate splice skewer scar
+def pummel(self):
+    if(self.owner in world.allies):
+        for enemy in world.enemies:
+            enemy.hurt(max(1,self.owner.strength-2))
+    else:
+        for ally in world.allies:
+            ally.hurt(max(1,self.owner.strength-2))
+def lick(self):
+    self.target.hurt(0)
+    self.target.poison+=2
+def tackle(self):
+    self.target.hurt(self.owner.strength) # stun
+def slam(self):
+    self.target.hurt(self.owner.strength*2) # +2?
+    self.owner.hurt(4)
+def dash(self):
+    self.target.hurt(1+self.owner.speed//4,2) # stun
+def duel(self):
+    if(self.owner.speed>self.target.speed and self.owner.strength>self.target.strength):
+        self.target.hurt(6,3)
+    else:
+        self.target.hurt(2)         
+def charge(self):
+    self.target.hurt(self.owner.strength//2+self.owner.speed//5)
+def sting(self):
+    self.target.hurt(2,3)
+    if(self.target.poison<1):
+        self.target.poison+=1
+def prick(self):
+    self.target.hurt(2,2)
+    self.target.hurt(2,2)
+def bite(self):
+    self.target.hurt(2)
+    self.owner.hp=min(self.owner.hp+max(0,2-target.defense), self.owner.maxhp)
+def heal(self):
+    self.owner.hp=min(self.owner.hp+4, self.owner.maxhp)
+actionPool = [
+    [lick],
+    [tackle],
+    [slam],
+    [dash],
+    [duel],
+    [charge],
+    [sting],
+    [prick],
+    [bite],
+    [pummel, ("targetRequired", False)],
+    [heal, ("targetRequired", False)],
+]
+
 class Insect():
     def __init__(self):
         self.alive=True
-        self.image=insectart.createSprite()
-        def bite(self):
-            self.target.hp-=5
-        def heal(self):
-            self.owner.hp=min(self.owner.hp+4, self.owner.maxhp)
-        
-        self.actions=[Action(self,"Bite",bite),Action(self,"Heal",heal,targetRequired=False)]
+        self.image=insectart.createSprite()        
+        self.setActions()
         self.determinedAction=None
         self.speed=random.randint(1,20)
-        self.maxhp=random.randint(10,30)
-        self.hp=self.maxhp
-        self.defense=random.randint(0,random.randint(0,5))
-        
-        self.name=""
-        self.species=""
+        self.maxhp=random.randint(10,30)       
+        self.defense=random.randint(0,random.randint(0,2))
+        self.strength=random.randint(2,6)
+        self.poison=0
+        self.stun=0
+        self.hp=self.maxhp        
+        self.setAttributes()
         self.createName()
         #self.level=lvl
+    def setActions(self):
+        self.actions=[]
+        actionTemplates=random.sample(actionPool, 2)
+        for actionTemplate in actionTemplates:
+            action = Action(self,actionTemplate[0])
+            for keyWord in actionTemplate[1:]:
+                setattr(action,keyWord[0],keyWord[1])
+            self.actions.append(action)
+    def hurt(self,damage,pierce=0):
+        self.hp-=max(damage-max(self.defense-pierce,0),0)+self.poison
+    def setAttributes(self):
+        self.attributeHash={}
+        attributeList=["speed","maxhp","defense","strength","poison","stun"]
+        for attr in attributeList:
+            self.attributeHash[attr]=getattr(self,attr)
+    def resetAttributes(self):
+        for attr in self.attributeHash:
+            setattr(self,attr,self.attributeHash[attr]) 
+        self.poison=0
+        self.hp=self.maxhp
     def createName(self):
+        self.name=""
+        self.species=""
         length=4
         name=""
         letter=random.choice(vernacularHash[""])
@@ -83,26 +169,16 @@ class Insect():
         desc+= "Species: "+str(self.species)+"<br>"
         desc+= "HP: "+str(self.hp)+" / "+str(self.maxhp)+"<br>"
         desc+= "Speed: "+str(self.speed)+"<br>"
-        desc+= "Defense: "+str(self.defense)+" (irrelevant)<br>"
+        desc+= "Strength: "+str(self.strength)+"<br>"
+        desc+= "Defense: "+str(self.defense)+"<br>"
         desc+= " <br>Attacks: <br>"
         for a in self.actions:
             desc+=a.name+"<br>"
+        if(self.poison):
+            desc+= " <br>Poisoned: "+str(self.poison)+"<br>"
         return desc
 
-
-
-class World():
-    def __init__(self):
-        self.day = 0
-        self.mode = ""
-        self.buttonMode="action" # action // target // inspect
-        self.active=None
-        self.enemies=[]
-        self.allies=[Insect()]
-        self.lootInsect=None
-        self.scientificHash={} 
-world=World()
-
+world.allies.append(Insect())
 # Main
 day_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((20, 25), (200, 75)),html_text="Days ahead so long",manager=managers[""])
 fight_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 275), (200, 50)),text='Fight ye Foes',manager=managers[""])
@@ -168,7 +244,7 @@ while is_running:
                         button.show()
                         button.set_text("select")
                     for i in range(len(world.allies)):
-                        world.allies[i].hp = world.allies[i].maxhp
+                        world.allies[i].resetAttributes()
                         button=ally_buttons[i]
                         button.show()
                         button.set_text("select")
@@ -179,6 +255,8 @@ while is_running:
                         world.lootInsect.alive = True
                     else:
                         print("Not enough space in your party!")
+                    for ally in world.allies:
+                        ally.resetAttributes()
                 if event.ui_element == inspect_button:
                     world.mode="i"
                     inspection_selectionlist.set_item_list(new_item_list=[ally.name for ally in world.allies])
@@ -213,7 +291,8 @@ while is_running:
                                         enemy_buttons[len(world.enemies)].hide()
                                 if not world.enemies:
                                     world.mode="w"
-                                    world.lootInsect=insect2 #from the for loop ^
+                                    world.lootInsect=insect2 #from the for loop 
+                                    world.lootInsect.resetAttributes()
                                 elif not world.allies:
                                     print("you lose")
                     for i, button in enumerate(ally_buttons):
