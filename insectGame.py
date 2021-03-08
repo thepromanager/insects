@@ -102,7 +102,8 @@ pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450+2*size*factor, 275+2
 ]
 
 action_selectionlist = pygame_gui.elements.UISelectionList(relative_rect=pygame.Rect((200, 175), (200, 2*size*factor+150)),item_list=[],manager=managers["f"],allow_multi_select=False)
-ok_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450+3*size*factor+50, 175), (200, 2*size*factor+150)),text='Confirm Turn',manager=managers["f"])
+ok_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450, 375+size*factor+50+40), (3*size*factor, 100)),text='Confirm Turn',manager=managers["f"])
+fight_inspect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((450+3*size*factor+50, 175), (200, 2*size*factor+150)),html_text="Inspect with haste, lest thou be struck!",manager=managers["f"])
 
 # Inspection
 inspection_selectionlist = pygame_gui.elements.UISelectionList(relative_rect=pygame.Rect((100, 175), (200, 2*size*factor+150)),item_list=[],manager=managers["i"],allow_multi_select=False)
@@ -139,6 +140,10 @@ while is_running:
                         world.enemies.append(Insect())
                     for button in enemy_buttons+ally_buttons:
                         button.hide()
+                    for i in range(len(world.enemies)):
+                        button=enemy_buttons[i]
+                        button.show()
+                        button.set_text("select")
                     for i in range(len(world.allies)):
                         world.allies[i].hp = world.allies[i].maxhp
                         button=ally_buttons[i]
@@ -190,6 +195,13 @@ while is_running:
                             actionNames=[action.name for action in world.allies[i].actions]
                             action_selectionlist.set_item_list(new_item_list=actionNames)
                             world.active=world.allies[i]
+                            #fight_inspect_textbox.html_text=world.allies[i].description() #happens every frame instead lol
+                            #fight_inspect_textbox.rebuild()
+                            break
+                    for i, button in enumerate(enemy_buttons):
+                        if(event.ui_element == button):
+                            action_selectionlist.set_item_list(new_item_list=[])
+                            world.active=world.enemies[i]
                             break
 
                 if(world.buttonMode=="target" and action_selectionlist.get_single_selection()):
@@ -205,7 +217,7 @@ while is_running:
 
                             world.buttonMode="action"
                             for button in enemy_buttons:
-                                button.hide()
+                                button.set_text("select")
                             for i in range(len(world.allies)):
                                 button=ally_buttons[i]
                                 button.set_text("select")
@@ -217,7 +229,7 @@ while is_running:
                             action_selectionlist.set_item_list(new_item_list=[])
                             world.buttonMode="action"
                             for button in enemy_buttons:
-                                button.hide()
+                                button.set_text("select")
                             for i in range(len(world.allies)):
                                 button=ally_buttons[i]
                                 button.set_text("select")
@@ -237,7 +249,7 @@ while is_running:
                 button.set_text("select")
             for i in range(len(world.enemies)):
                 button=enemy_buttons[i]
-                button.hide()
+                button.set_text("select")
             world.active.determinedAction=action
             action_selectionlist.set_item_list(new_item_list=[])
         else:
@@ -266,6 +278,12 @@ while is_running:
             window_surface.blit(pygame.transform.flip(person.image,0,1),(450+i*size*factor, 175))
             pygame.draw.rect(window_surface, (100,0,0),(450+i*size*factor, 175+1*size*factor, size*factor, factor*2), 0)
             pygame.draw.rect(window_surface, (0,200,0),(450+i*size*factor, 175+1*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
+        if world.active:
+            fight_inspect_textbox.html_text=world.active.description()
+            fight_inspect_textbox.rebuild()
+        else:
+            fight_inspect_textbox.html_text="Inspect with haste, lest thou be struck!"
+            fight_inspect_textbox.rebuild()
     elif(world.mode=="i"): #every frame!?
         if(inspection_selectionlist.get_single_selection()):
 
