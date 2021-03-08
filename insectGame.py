@@ -30,24 +30,33 @@ class Insect():
         self.alive=True
         self.image=insectart.createSprite()
         def bite(self):
-            self.target.hp-=2
+            self.target.hp-=5
         def heal(self):
-            self.owner.hp=min(self.owner.hp+2, self.owner.maxhp)
+            self.owner.hp=min(self.owner.hp+4, self.owner.maxhp)
         
         self.actions=[Action(self,"Bite",bite),Action(self,"Heal",heal,targetRequired=False)]
         self.determinedAction=None
-        self.speed=10
-        self.hp=10
-        self.maxhp=10
-        self.defense=0
+        self.speed=random.randint(1,20)
+        self.maxhp=random.randint(10,30)
+        self.hp=self.maxhp
+        self.defense=random.randint(0,random.randint(0,5))
         
         self.name=self.createName()
         #self.level=lvl
     def createName(self):
-
-        return str(random.random())
+        a = ["Skr", "Gn", "Ghr","Kr","Br"]
+        b = ["ee","ooh","ie","ig","ix"]
+        return random.choice(a)+random.choice(b)
     def description(self):
-        return str(self.__dict__)
+        desc = ""
+        desc+= "Name: "+str(self.name)+"<br>"
+        desc+= "HP: "+str(self.maxhp)+"<br>"
+        desc+= "Speed: "+str(self.speed)+"<br>"
+        desc+= "Defense: "+str(self.defense)+" (irrelevant)<br>"
+        desc+= " <br>Attacks: <br>"
+        for a in self.actions:
+            desc+=a.name+"<br>"
+        return desc
 class Action():
     def __init__(self,owner,name,activateFunction,targetRequired=True,isBad=True):
         self.owner=owner
