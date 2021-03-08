@@ -19,6 +19,7 @@ managers={
     "f":pygame_gui.UIManager(screenSize), #Fight
     "i":pygame_gui.UIManager(screenSize), #Inspection
     "a":pygame_gui.UIManager(screenSize), #Altar
+    "w":pygame_gui.UIManager(screenSize), #Win
     }
 #overlay=pygame_gui.UIManager(screenSize)
 
@@ -74,7 +75,8 @@ class World():
         self.buttonMode="action" # action // target // inspect
         self.active=None
         self.enemies=[]
-        self.allies=[Insect(),Insect(),Insect()]
+        self.allies=[Insect()]
+        self.lootInsect=None
  
 world=World()
 
@@ -107,6 +109,11 @@ inspection_selectionlist = pygame_gui.elements.UISelectionList(relative_rect=pyg
 inspect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((800, 175), (300, 350)),html_text="Insect information up ahead <br> so far",manager=managers["i"])
 back_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((50, 50), (100, 50)),text='Back',manager=managers["i"])
 
+# Win
+win_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((20, 25), (200, 75)),html_text="YOU WIN <br>This insect will join your team",manager=managers["w"])
+loot_insect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((800, 175), (300, 350)),html_text="This insect is cool.",manager=managers["w"])
+loot_insect_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((360, 200+4*size*factor), (4*size*factor, 100)),text='This insect will join my team',manager=managers["w"])
+
 
 
 
@@ -127,13 +134,19 @@ while is_running:
                     world.mode=""
                 if event.ui_element == fight_button:
                     world.mode="f"
-                    world.enemies=[Insect(),Insect(),Insect()]
-                    for button in enemy_buttons:
+                    world.enemies=[]
+                    for i in range(random.randint(1,2)): #...
+                        world.enemies.append(Insect())
+                    for button in enemy_buttons+ally_buttons:
                         button.hide()
                     for i in range(len(world.allies)):
+                        world.allies[i].hp = world.allies[i].maxhp
                         button=ally_buttons[i]
                         button.show()
                         button.set_text("select")
+                if event.ui_element == loot_insect_button:
+                    world.mode=""
+                    world.allies.append(world.lootInsect)
                 if event.ui_element == inspect_button:
                     world.mode="i"
                     inspection_selectionlist.set_item_list(new_item_list=[ally.name for ally in world.allies])
@@ -153,6 +166,7 @@ while is_running:
                         for insect in insects: #loop through all initial insects
                             if(insect.determinedAction and insect.alive):
                                 insect.determinedAction.activate()
+                                print(insect.name, "used", insect.determinedAction.name)
                                 insect.determinedAction.target=None
                                 insect.determinedAction=None
                                 for insect2 in world.allies:
@@ -165,6 +179,11 @@ while is_running:
                                         insect2.alive=False
                                         world.enemies.remove(insect2)
                                         enemy_buttons[len(world.enemies)].hide()
+                                if not world.enemies:
+                                    world.mode="w"
+                                    world.lootInsect=insect2 #from the for loop ^
+                                elif not world.allies:
+                                    print("you lose")
                     for i, button in enumerate(ally_buttons):
                         if(event.ui_element == button):
                             actionNames=[action.name for action in world.allies[i].actions]
@@ -211,6 +230,13 @@ while is_running:
             if action.name==action_selectionlist.get_single_selection():
                 break
         if(action.targetRequired==False):
+            world.buttonMode="action"
+            for i in range(len(world.allies)):
+                button=ally_buttons[i]
+                button.set_text("select")
+            for i in range(len(world.enemies)):
+                button=enemy_buttons[i]
+                button.hide()
             world.active.determinedAction=action
             action_selectionlist.set_item_list(new_item_list=[])
         else:
@@ -239,7 +265,7 @@ while is_running:
             window_surface.blit(pygame.transform.flip(person.image,0,1),(450+i*size*factor, 175))
             pygame.draw.rect(window_surface, (100,0,0),(450+i*size*factor, 175+1*size*factor, size*factor, factor*2), 0)
             pygame.draw.rect(window_surface, (0,200,0),(450+i*size*factor, 175+1*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
-    elif(world.mode=="i"):
+    elif(world.mode=="i"): #every frame!?
         if(inspection_selectionlist.get_single_selection()):
 
             for insect in world.allies:
@@ -249,5 +275,14 @@ while is_running:
             inspect_textbox.rebuild()
             bigImage=pygame.transform.scale(insect.image,(4*size*factor,4*size*factor))
             window_surface.blit(bigImage,(360, 160))
+        else:
+            inspect_textbox.html_text="Insect information up ahead <br> so far"
+            inspect_textbox.rebuild()
+    elif(world.mode=="w"):
+        loot_insect_textbox.html_text=insect.description()
+        loot_insect_textbox.rebuild()
+        bigImage=pygame.transform.scale(world.lootInsect.image,(4*size*factor,4*size*factor))
+        window_surface.blit(bigImage,(360, 160))
+
     pygame.display.update()
 
