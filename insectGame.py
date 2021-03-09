@@ -68,7 +68,7 @@ def pummel(self):
             ally.hurt(max(1,self.owner.strength-2))
 def lick(self):
     self.target.hurt(0)
-    self.target.poison+=2
+    self.target.poison+=3
 def tackle(self):
     self.target.hurt(self.owner.strength) # stun
 def slam(self):
@@ -82,17 +82,17 @@ def duel(self):
     else:
         self.target.hurt(2)         
 def charge(self):
-    self.target.hurt(self.owner.strength//2+self.owner.speed//5)
+    self.target.hurt(self.owner.strength//2+self.owner.speed//4)
 def sting(self):
-    self.target.hurt(2,3)
+    self.target.hurt(3,3)
     if(self.target.poison<1):
         self.target.poison+=1
 def prick(self):
     self.target.hurt(2,2)
     self.target.hurt(2,2)
 def bite(self):
-    self.target.hurt(2)
-    self.owner.hp=min(self.owner.hp+max(0,2-self.target.defense), self.owner.maxhp)
+    self.target.hurt(3)
+    self.owner.hp=min(self.owner.hp+max(0,3-self.target.defense), self.owner.maxhp)
 def heal(self):
     self.owner.hp=min(self.owner.hp+4, self.owner.maxhp)
 actionPool = [
@@ -115,10 +115,21 @@ class Insect():
         self.image=insectart.createSprite()        
         self.setActions()
         self.determinedAction=None
-        self.speed=random.randint(1,20)
-        self.maxhp=random.randint(10,30)       
-        self.defense=random.randint(0,random.randint(0,2))
-        self.strength=random.randint(2,6)
+        self.speed=0#random.randint(1,20)
+        self.maxhp=1#random.randint(10,30)
+        self.defense=0#random.randint(0,random.randint(0,2))
+        self.strength=0#random.randint(2,5)
+        for i in range(40):
+            if random.random()<0.5:
+                self.maxhp+=1
+            elif random.random()<0.4:
+                self.strength+=0.5
+            elif random.random()<0.6:
+                self.speed+=1
+            elif random.random()<0.5:
+                self.defense+=0.5
+        self.strength = int(self.strength)
+        self.defense = int(self.defense)
         self.poison=0
         self.stun=0
         self.hp=self.maxhp        
@@ -297,6 +308,8 @@ while is_running:
                                         insect2.alive=False
                                         world.allies.remove(insect2)
                                         ally_buttons[len(world.allies)].hide()
+                                if len(world.enemies)==1:
+                                    world.lootInsect = world.enemies[0]
                                 for insect2 in world.enemies:
                                     if insect2.hp<=0:
                                         insect2.alive=False
@@ -304,7 +317,6 @@ while is_running:
                                         enemy_buttons[len(world.enemies)].hide()
                                 if not world.enemies:
                                     world.mode="w"
-                                    world.lootInsect=insect2 #from the for loop 
                                     world.lootInsect.resetAttributes()
                                 elif not world.allies:
                                     print("you lose")
