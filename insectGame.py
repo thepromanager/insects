@@ -92,7 +92,7 @@ def prick(self):
     self.target.hurt(2,2)
 def bite(self):
     self.target.hurt(2)
-    self.owner.hp=min(self.owner.hp+max(0,2-target.defense), self.owner.maxhp)
+    self.owner.hp=min(self.owner.hp+max(0,2-self.target.defense), self.owner.maxhp)
 def heal(self):
     self.owner.hp=min(self.owner.hp+4, self.owner.maxhp)
 actionPool = [
