@@ -9,12 +9,9 @@ import json
 import inspect
 
 pygame.init()
-screenSize=(1200,700)
+screenSize=(1200,675) #675 height for 16:9
 pygame.display.set_caption('Quick Start')
 window_surface = pygame.display.set_mode(screenSize)
-
-background = pygame.Surface(screenSize)
-background.fill(pygame.Color('#FFFFFF'))
 
 managers={
     "":pygame_gui.UIManager(screenSize), #Main menu
@@ -28,6 +25,13 @@ managers={
 
 factor = 3
 size=32
+
+backgrounds = {}
+for key in managers:
+    bg = pygame.image.load("textures/background"+key+".png")
+    bg = pygame.transform.scale(bg, (factor*400, factor*225)) #also should be equal to screenSize
+    backgrounds[key] = bg
+
 scientificHash={}
 with open('insectscientificName4.json', 'r') as f:
     scientificHash = json.load(f)
@@ -165,16 +169,16 @@ class Insect():
         self.speed=0#random.randint(1,20)
         self.maxhp=1#random.randint(10,30)
         self.defense=0#random.randint(0,random.randint(0,2))
-        self.strength=0#random.randint(2,5)
+        self.strength=1#random.randint(2,5)
         for i in range(40):
             if random.random()<0.5:
                 self.maxhp+=1
             elif random.random()<0.4:
-                self.strength+=0.5
+                self.strength+=0.4
             elif random.random()<0.6:
                 self.speed+=1
             elif random.random()<0.5:
-                self.defense+=0.5
+                self.defense+=0.4
         self.strength = int(self.strength)
         self.defense = int(self.defense)
         self.poison=0
@@ -255,19 +259,19 @@ moveset_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 50
 
 # Fight
 enemy_buttons = [
-pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450, 175+size*factor), (100, 50)),text='Select',manager=managers["f"]),
-pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450+size*factor, 175+size*factor), (100, 50)),text='Select',manager=managers["f"]),
-pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450+2*size*factor, 175+size*factor), (100, 50)),text='Select',manager=managers["f"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2-int(1.5*size*factor), 175+size*factor), (100, 50)),text='Select',manager=managers["f"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2-int(0.5*size*factor), 175+size*factor), (100, 50)),text='Select',manager=managers["f"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2+int(0.5*size*factor), 175+size*factor), (100, 50)),text='Select',manager=managers["f"]),
 ]
 
 ally_buttons = [
-pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450, 275+2*size*factor), (100, 50)),text='Select',manager=managers["f"]),
-pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450+size*factor, 275+2*size*factor), (100, 50)),text='Select',manager=managers["f"]),
-pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450+2*size*factor, 275+2*size*factor), (100, 50)),text='Select',manager=managers["f"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2-int(1.5*size*factor), 275+2*size*factor), (100, 50)),text='Select',manager=managers["f"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2-int(0.5*size*factor), 275+2*size*factor), (100, 50)),text='Select',manager=managers["f"]),
+pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2+int(0.5*size*factor), 275+2*size*factor), (100, 50)),text='Select',manager=managers["f"]),
 ]
 
 action_selectionlist = pygame_gui.elements.UISelectionList(relative_rect=pygame.Rect((200, 175), (200, 2*size*factor+150)),item_list=[],manager=managers["f"],allow_multi_select=False)
-ok_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((450, 375+size*factor+50+40), (3*size*factor, 100)),text='Confirm Turn',manager=managers["f"])
+ok_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((screenSize[0]//2-int(1.5*size*factor), 275+2*size*factor+50+30), (3*size*factor, 100)),text='Confirm Turn',manager=managers["f"])
 fight_inspect_textbox = pygame_gui.elements.UITextBox(relative_rect=pygame.Rect((450+3*size*factor+50, 175), (200, 2*size*factor+150)),html_text="Inspect with haste, lest thou be struck!",manager=managers["f"])
 
 # Inspection
@@ -448,19 +452,19 @@ while is_running:
         
     manager.update(time_delta)
     #draw
-    window_surface.blit(background, (0, 0)) 
+    window_surface.blit(backgrounds[world.mode], (0, 0)) 
     manager.draw_ui(window_surface)
     if(world.mode=="f"):
         for i in range(len(world.allies)):
             person = world.allies[i]
-            window_surface.blit(person.image,(450+i*size*factor, 275+size*factor))
-            pygame.draw.rect(window_surface, (100,0,0),(450+i*size*factor, 275+2*size*factor, size*factor, factor*2), 0)
-            pygame.draw.rect(window_surface, (0,200,0),(450+i*size*factor, 275+2*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
+            window_surface.blit(person.image,(screenSize[0]//2+int((i-1.5)*size*factor), 275+size*factor))
+            pygame.draw.rect(window_surface, (100,0,0),(screenSize[0]//2+int((i-1.5)*size*factor), 275+2*size*factor, size*factor, factor*2), 0)
+            pygame.draw.rect(window_surface, (0,200,0),(screenSize[0]//2+int((i-1.5)*size*factor), 275+2*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
         for i in range(len(world.enemies)):
             person = world.enemies[i]
-            window_surface.blit(pygame.transform.flip(person.image,0,1),(450+i*size*factor, 175))
-            pygame.draw.rect(window_surface, (100,0,0),(450+i*size*factor, 175+1*size*factor, size*factor, factor*2), 0)
-            pygame.draw.rect(window_surface, (0,200,0),(450+i*size*factor, 175+1*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
+            window_surface.blit(pygame.transform.flip(person.image,0,1),(screenSize[0]//2+int((i-1.5)*size*factor), 175))
+            pygame.draw.rect(window_surface, (100,0,0),(screenSize[0]//2+int((i-1.5)*size*factor), 175+1*size*factor, size*factor, factor*2), 0)
+            pygame.draw.rect(window_surface, (0,200,0),(screenSize[0]//2+int((i-1.5)*size*factor), 175+1*size*factor, (size*factor*person.hp)//person.maxhp, factor*2), 0)
         if world.active:
             fight_inspect_textbox.html_text=world.active.description()
             fight_inspect_textbox.rebuild()
