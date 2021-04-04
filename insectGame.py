@@ -55,10 +55,56 @@ class Action():
         self.isBad=True
         self.target=None
         self.activate=types.MethodType(activateFunction, self)
+    def evalExpr(self,expr):
+        insect=Insect(fake=True)
+        action=Action(insect,bite)
+        
+        insect.maxhp=20
+        insect.strength=4
+        insect.speed=7
+        insect.defense=1
+        action.owner=insect
+        action.target=insect
+        return expr(action)
     def generateAction(self):
-        pass
+        actionType=random.choice(["attack"])#,"buff","debuff"])
+        if(actionType=="attack"):
+            expr=self.expr()
+            num=random.randint(0,random.randint(0,random.randint(0,2)))*2
+            print(self.evalExpr(expr))
+            def activateFunction(slf):
+                print(expr(slf))
+                slf.target.hurt(expr(slf),num)
+            
+            self.activate=types.MethodType(activateFunction, self)
+    def expr(self):
+        a=random.choices(["num","attr","plus","mult"],weights=[0.4,0.3,0.2,0.1],k=1)[0]
+        if(a=="num"):
+            num=random.randint(1,6)
+            def expr(slf):
+                return num
+            return expr
+        elif(a=="attr"):
+            attr=random.choice(["speed","defense","strength","poison"])
+            target=random.choice(["owner","target"])
+            def expr(slf):
+                return getattr(getattr(slf,target),attr)
+            return expr
+        elif(a=="plus"):
+            expr1=self.expr()
+            expr2=self.expr()
+            def expr(slf):
+                return expr1(slf)+expr2(slf)
+            return expr
+        elif(a=="mult"):
+            expr1=self.expr()
+            expr2=self.expr()
+            def expr(slf):
+                return expr1(slf)*expr2(slf)
+            return expr
 
 #Fling  Bash Prick Pound DashSlashthwack amputate splice skewer scar
+#corode regain strenghten quicken
 def pummel(self):
     if(self.owner in world.allies):
         for enemy in world.enemies:
@@ -110,10 +156,11 @@ actionPool = [
 ]
 
 class Insect():
-    def __init__(self):
+    def __init__(self,fake=False):
         self.alive=True
-        self.image=insectart.createSprite()        
-        self.setActions()
+        self.image=insectart.createSprite() 
+        if(fake==False):       
+            self.setActions()
         self.determinedAction=None
         self.speed=0#random.randint(1,20)
         self.maxhp=1#random.randint(10,30)
@@ -144,6 +191,12 @@ class Insect():
             for keyWord in actionTemplate[1:]:
                 setattr(action,keyWord[0],keyWord[1])
             self.actions.append(action)
+        if(random.random()<1):
+            action=Action(self,bite)
+            action.name="Procedural"
+            action.generateAction()
+            self.actions.append(action)
+
     def hurt(self,damage,pierce=0):
         self.hp-=max(damage-max(self.defense-pierce,0),0)+self.poison
     def setAttributes(self):
